@@ -16,7 +16,7 @@ initial_screen_name = 'tfitb'
 user_file = 'user.csv'
 follower_file = 'follow.csv'
 tweet_file = 'tweet.csv'
-json_file = 'data2.json'
+json_file = 'data/data1.json'
 
 users = []
 rels = []
