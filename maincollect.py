@@ -1,4 +1,3 @@
-import csv
 import json
 import re
 import time
@@ -13,9 +12,6 @@ idx = 0
 api = listAPI[idx]
 
 initial_screen_name = 'tfitb'
-user_file = 'user.csv'
-follower_file = 'follow.csv'
-tweet_file = 'tweet.csv'
 json_file = 'data/data1.json'
 
 users = []
@@ -87,13 +83,6 @@ while cursor != 0:
 
 print("follower from initial user done")
 
-""""
-with open('data.json') as json_data:
-    d = json.load(json_data)
-    users = d['users']
-    rels = d['rels']
-"""
-
 print("starting getting all tweets from user lv 1")
 
 for u in users:
@@ -106,18 +95,6 @@ for u in users:
                 tw['created_at'] = tweet['created_at']
                 tw['id_user'] = tweet['user']['id']
 
-                hashtag = []
-                if 'hashtags' in tweet['entities']:
-                    for h in tweet['entities']['hashtags']:
-                        hashtag.append(h['text'])
-                user_mention = []
-                if 'user_mentions' in tweet['entities']:
-                    for um in tweet['entities']['user_mentions']:
-                        user_mention.append(um['id'])
-
-                tw['hashtag'] = hashtag
-                tw['user_mention'] = user_mention
-
                 tw['favorite_count'] = tweet['favorite_count']
                 tw['retweet_count'] = tweet['retweet_count']
                 tw['text'] = remove_emoji(tweet['text'])
@@ -126,6 +103,7 @@ for u in users:
                 tw['is_quote_status'] = tweet['is_quote_status']
                 if 'quoted_status' in tweet:
                     tw['quoted_status_id'] = tweet['quoted_status']['id']
+                    tw['quoted_status_created_at'] = tweet['quoted_status']['created_at']
                     tw['quoted_user_id'] = tweet['quoted_status']['user']['id']
                 else:
                     tw['quoted_status_id'] = None
@@ -133,6 +111,7 @@ for u in users:
 
                 if 'retweeted_status' in tweet:
                     tw['retweeted_status'] = tweet['retweeted_status']['id']
+                    tw['retweeted_status_created_at'] = tweet['retweeted_status']['created_at']
                     tw['retweeted_user'] = tweet['retweeted_status']['user']['id']
                 else:
                     tw['retweeted_status'] = None
@@ -201,8 +180,8 @@ for u in users:
             follower_ids = api.get_friends_ids(id=u['id'], count=125)
             for ids in follower_ids['ids']:
                 r = {}
-                r['id_user'] = u['id']
-                r['id_follower'] = ids
+                r['id_user'] = ids
+                r['id_follower'] = u['id']
                 if r not in rels:
                     rels.append(r)
             break
@@ -221,7 +200,7 @@ print("done getting all following from user lv 1")
 
 #save all data to json
 with open(json_file, 'w') as jsonfile:
-    json.dump({'users': users, 'rels': rels, 'tweet': tweets}, jsonfile, default=str)
+    json.dump({'users': users, 'rels': rels, 'tweets': tweets}, jsonfile, default=str)
 
 
 print("done make json")
