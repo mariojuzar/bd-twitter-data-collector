@@ -12,7 +12,7 @@ idx = 0
 api = listAPI[idx]
 
 initial_screen_name = 'tfitb'
-json_file = 'data/data1.json'
+json_file = 'data1.json'
 
 users = []
 rels = []
@@ -50,6 +50,13 @@ def remove_emoji(string):
                            u"\U000024C2-\U0001F251"
                            "] + ", flags=re.UNICODE)
     return emoji_pattern.sub(r'', string)
+
+
+def check_exists(a, li):
+    for us in li:
+        if a == us['id']:
+            return True
+    return False
 
 
 start = datetime.now()
@@ -197,6 +204,125 @@ for u in users:
 
 
 print("done getting all following from user lv 1")
+
+print("starting getting all tweets from user lv 2")
+
+for u in rels:
+    if not check_exists(u['id_user'], users):
+        while True:
+            try:
+                tweets_user = api.get_user_timeline(id=u['id_user'], count=3)
+                for tweet in tweets_user:
+                    tw = {}
+                    tw['id'] = tweet['id']
+                    tw['created_at'] = tweet['created_at']
+                    tw['id_user'] = tweet['user']['id']
+
+                    tw['favorite_count'] = tweet['favorite_count']
+                    tw['retweet_count'] = tweet['retweet_count']
+                    tw['text'] = remove_emoji(tweet['text'])
+                    tw['in_reply_to_status_id'] = tweet['in_reply_to_status_id']
+                    tw['in_reply_to_user_id'] = tweet['in_reply_to_user_id']
+                    tw['is_quote_status'] = tweet['is_quote_status']
+                    if 'quoted_status' in tweet:
+                        tw['quoted_status_id'] = tweet['quoted_status']['id']
+                        tw['quoted_status_created_at'] = tweet['quoted_status']['created_at']
+                        tw['quoted_user_id'] = tweet['quoted_status']['user']['id']
+                    else:
+                        tw['quoted_status_id'] = None
+                        tw['quoted_user_id'] = None
+
+                    if 'retweeted_status' in tweet:
+                        tw['retweeted_status'] = tweet['retweeted_status']['id']
+                        tw['retweeted_status_created_at'] = tweet['retweeted_status']['created_at']
+                        tw['retweeted_user'] = tweet['retweeted_status']['user']['id']
+                    else:
+                        tw['retweeted_status'] = None
+                        tw['retweeted_user'] = None
+
+                    if tw['in_reply_to_status_id'] is not None:
+                        tw['type'] = 'REPLY'
+                    elif tw['is_quote_status']:
+                        tw['type'] = 'QUOTED'
+                    elif tw['retweeted_status'] is not None:
+                        tw['type'] = 'RETWEET'
+                    else:
+                        tw['type'] = 'TWEET'
+
+                    tweets.append(tw)
+
+                break
+
+            except TwythonRateLimitError:
+                limit_handling()
+                continue
+
+            except TwythonError as e:
+                if '401 (Unauthorized)' in e.args[0]:
+                    break
+                else:
+                    limit_handling()
+                continue
+
+    if not check_exists(u['id_follower'], users):
+        while True:
+            try:
+                tweets_user = api.get_user_timeline(id=u['id_follower'], count=3)
+                for tweet in tweets_user:
+                    tw = {}
+                    tw['id'] = tweet['id']
+                    tw['created_at'] = tweet['created_at']
+                    tw['id_user'] = tweet['user']['id']
+
+                    tw['favorite_count'] = tweet['favorite_count']
+                    tw['retweet_count'] = tweet['retweet_count']
+                    tw['text'] = remove_emoji(tweet['text'])
+                    tw['in_reply_to_status_id'] = tweet['in_reply_to_status_id']
+                    tw['in_reply_to_user_id'] = tweet['in_reply_to_user_id']
+                    tw['is_quote_status'] = tweet['is_quote_status']
+                    if 'quoted_status' in tweet:
+                        tw['quoted_status_id'] = tweet['quoted_status']['id']
+                        tw['quoted_status_created_at'] = tweet['quoted_status']['created_at']
+                        tw['quoted_user_id'] = tweet['quoted_status']['user']['id']
+                    else:
+                        tw['quoted_status_id'] = None
+                        tw['quoted_user_id'] = None
+
+                    if 'retweeted_status' in tweet:
+                        tw['retweeted_status'] = tweet['retweeted_status']['id']
+                        tw['retweeted_status_created_at'] = tweet['retweeted_status']['created_at']
+                        tw['retweeted_user'] = tweet['retweeted_status']['user']['id']
+                    else:
+                        tw['retweeted_status'] = None
+                        tw['retweeted_user'] = None
+
+                    if tw['in_reply_to_status_id'] is not None:
+                        tw['type'] = 'REPLY'
+                    elif tw['is_quote_status']:
+                        tw['type'] = 'QUOTED'
+                    elif tw['retweeted_status'] is not None:
+                        tw['type'] = 'RETWEET'
+                    else:
+                        tw['type'] = 'TWEET'
+
+                    tweets.append(tw)
+
+                break
+
+            except TwythonRateLimitError:
+                limit_handling()
+                continue
+
+            except TwythonError as e:
+                if '401 (Unauthorized)' in e.args[0]:
+                    break
+                else:
+                    limit_handling()
+                continue
+
+
+print("done getting all tweet from user lv 2")
+
 
 #save all data to json
 with open(json_file, 'w') as jsonfile:
